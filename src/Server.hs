@@ -10,7 +10,7 @@ import Network.Socket
 type ActiveClient = SockAddr
 
 data Event =
-    MsgEvent Message
+    RecvEvent Message
   | TickEvent
 
 main :: IO ()
@@ -36,7 +36,7 @@ messageOrTimer = do
   maybeMsg <- await
   case maybeMsg of
     Just msg -> do
-      yield $ MsgEvent msg
+      yield $ RecvEvent msg
       messageOrTimer
     _ -> return ()
 
@@ -46,10 +46,10 @@ manageActiveClients activeClients = do
   case maybeEvt of
     Just evt ->
       case evt of
-        MsgEvent msg ->
+        RecvEvent msg ->
           let activeClients = [msgSender msg]
           in do
-            yield (MsgEvent msg, activeClients)
+            yield (RecvEvent msg, activeClients)
             manageActiveClients activeClients
         TickEvent -> do
           yield (TickEvent, activeClients)
@@ -63,7 +63,7 @@ xxx = do
   case maybeEvtAndActiveClients of
     Just (evt, activeClients) ->
       case evt of
-        MsgEvent msg -> do
+        RecvEvent msg -> do
           yield msg
           xxx
         TickEvent -> do
