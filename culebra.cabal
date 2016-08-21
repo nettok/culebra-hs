@@ -3,7 +3,7 @@ version:             0.1.0.0
 synopsis:            Multiplayer snake game
 description:         Please see README.md
 homepage:            https://github.com/nettok/culebra-hs
-license:             GPL3
+license:             GPL-3
 license-file:        LICENSE
 author:              Ernesto Menéndez
 maintainer:          pyalec@gmail.com
@@ -18,8 +18,11 @@ executable culebra-server
   ghc-options:         -main-is Server
   default-language:    Haskell2010
   build-depends:       base >= 4.7 && < 5
-                     , conduit
-                     , conduit-extra
+                     , async == 2.1.0
+                     , conduit == 1.2.7
+                     , conduit-extra == 1.1.13.2
+                     , network == 2.6.3.1
+                     , stm-conduit == 3.0.0
 
 executable culebra-client
   hs-source-dirs:      src
