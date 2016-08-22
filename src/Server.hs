@@ -2,16 +2,22 @@
 
 module Server where
 
+import Control.Concurrent (threadDelay)
+import Control.Monad
 import Control.Monad.IO.Class
+import Control.Monad.Trans.Resource
 import Data.Conduit
 import Data.Conduit.Network.UDP
+import Data.Conduit.TMChan
 import Network.Socket
+
+import qualified Data.ByteString.Char8 as C
 
 type ActiveClient = SockAddr
 
 data Event =
     RecvEvent Message
-  | TickEvent
+  | TickEvent Integer
 
 main :: IO ()
 main = do
@@ -28,18 +34,29 @@ bindToAddr sock hostStr port = do
   bind sock $ SockAddrInet port host
 
 handleMessage :: Conduit Message IO Message
-handleMessage = messageOrTimer =$= manageActiveClients [] =$= xxx
+handleMessage = messageOrTick =$= manageActiveClients [] =$= xxx
+
+ticks :: Source IO Event
+ticks = do
+  yield $ TickEvent 0
+  liftIO $ threadDelay 10000
+  yield $ TickEvent 1
+  liftIO $ threadDelay 10000
+  yield $ TickEvent 2
+  liftIO $ threadDelay 10000
+  yield $ TickEvent 3
 
 -- TODO: this is temporary, need to see how to combine sources of "ticker" and "messages"
-messageOrTimer :: Conduit Message IO Event
-messageOrTimer = do
+messageOrTick :: Conduit Message IO Event
+messageOrTick = do
   maybeMsg <- await
   case maybeMsg of
     Just msg -> do
       yield $ RecvEvent msg
-      messageOrTimer
+      messageOrTick
     _ -> return ()
 
+-- TODO: really manage active clients, not only the client that sent the last message
 manageActiveClients :: [ActiveClient] -> Conduit Event IO (Event, [ActiveClient])
 manageActiveClients activeClients = do
   maybeEvt <- await
@@ -51,8 +68,8 @@ manageActiveClients activeClients = do
           in do
             yield (RecvEvent msg, activeClients)
             manageActiveClients activeClients
-        TickEvent -> do
-          yield (TickEvent, activeClients)
+        TickEvent n -> do
+          yield (TickEvent n, activeClients)
           manageActiveClients activeClients
     _ -> return ()
 
@@ -66,8 +83,9 @@ xxx = do
         RecvEvent msg -> do
           yield msg
           xxx
-        TickEvent -> do
-          yield Message { msgData = "tick",  msgSender = head activeClients}
+        TickEvent n -> do
+          unless (null activeClients) $
+            yield Message { msgData = C.pack  $ "tick " ++ show n,  msgSender = head activeClients}
           liftIO $ print activeClients
           xxx
     _ -> return ()

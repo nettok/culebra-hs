@@ -19,9 +19,11 @@ executable culebra-server
   default-language:    Haskell2010
   build-depends:       base >= 4.7 && < 5
                      , async == 2.1.0
+                     , bytestring == 0.10.8.1
                      , conduit == 1.2.7
                      , conduit-extra == 1.1.13.2
                      , network == 2.6.3.1
+                     , resourcet == 1.1.7.5
                      , stm-conduit == 3.0.0
 
 executable culebra-client
