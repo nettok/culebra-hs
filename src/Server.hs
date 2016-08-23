@@ -21,9 +21,11 @@ data Event =
 
 main :: IO ()
 main = do
-  sock <- udpSocket
+  sock <- liftIO udpSocket
   bindToAddr sock "127.0.0.1" 7777
-  sourceSocket sock 4096 $$ handleMessage =$ sinkToSocket sock
+  runResourceT $ do
+    mergedEvents <- mergeSources [recvEvents sock 4096, tickEvents 0 1000] 16
+    liftIO (mergedEvents $$ handleEvents =$ sinkToSocket sock)
 
 udpSocket :: IO Socket
 udpSocket = socket AF_INET Datagram 17
@@ -33,28 +35,17 @@ bindToAddr sock hostStr port = do
   host <- inet_addr hostStr
   bind sock $ SockAddrInet port host
 
-handleMessage :: Conduit Message IO Message
-handleMessage = messageOrTick =$= manageActiveClients [] =$= xxx
+recvEvents :: Socket -> Int -> Source (ResourceT IO) Event
+recvEvents sock maxLen = mapOutput RecvEvent $ sourceSocket sock maxLen
 
-ticks :: Source IO Event
-ticks = do
-  yield $ TickEvent 0
-  liftIO $ threadDelay 10000
-  yield $ TickEvent 1
-  liftIO $ threadDelay 10000
-  yield $ TickEvent 2
-  liftIO $ threadDelay 10000
-  yield $ TickEvent 3
+tickEvents :: Integer -> Int -> Source (ResourceT IO) Event
+tickEvents n delayMillis = do
+  yield $ TickEvent n
+  liftIO $ threadDelay (delayMillis * 1000)
+  tickEvents (n + 1) delayMillis
 
--- TODO: this is temporary, need to see how to combine sources of "ticker" and "messages"
-messageOrTick :: Conduit Message IO Event
-messageOrTick = do
-  maybeMsg <- await
-  case maybeMsg of
-    Just msg -> do
-      yield $ RecvEvent msg
-      messageOrTick
-    _ -> return ()
+handleEvents :: Conduit Event IO Message
+handleEvents = manageActiveClients [] =$= xxx
 
 -- TODO: really manage active clients, not only the client that sent the last message
 manageActiveClients :: [ActiveClient] -> Conduit Event IO (Event, [ActiveClient])
@@ -73,7 +64,7 @@ manageActiveClients activeClients = do
           manageActiveClients activeClients
     _ -> return ()
 
--- TODO: this is also a place holder that will process "ticks" and "messages" and any number of "messages"
+-- TODO: process "events" and produce any number of "messages" (temporary placeholder)
 xxx :: Conduit (Event, [ActiveClient]) IO Message
 xxx = do
   maybeEvtAndActiveClients <- await
@@ -85,7 +76,7 @@ xxx = do
           xxx
         TickEvent n -> do
           unless (null activeClients) $
-            yield Message { msgData = C.pack  $ "tick " ++ show n,  msgSender = head activeClients}
+            yield Message { msgData = C.pack  $ "tick " ++ show n ++ "\n",  msgSender = head activeClients}
           liftIO $ print activeClients
           xxx
     _ -> return ()
