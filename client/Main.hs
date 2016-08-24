@@ -1,5 +1,6 @@
-module Client where
+module Main where
 
 main :: IO ()
 main = do
   putStrLn "cliente"
+  

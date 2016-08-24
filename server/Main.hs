@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Server where
+module Main where
 
 import Control.Concurrent (threadDelay)
 import Control.Monad
@@ -12,6 +12,8 @@ import Data.Conduit.TMChan
 import Network.Socket
 
 import qualified Data.ByteString.Char8 as C
+
+import Game (game)
 
 type ActiveClient = SockAddr
 
@@ -76,7 +78,7 @@ xxx = do
           xxx
         TickEvent n -> do
           unless (null activeClients) $
-            yield Message { msgData = C.pack  $ "tick " ++ show n ++ "\n",  msgSender = head activeClients}
+            yield Message { msgData = C.pack  $ "tick " ++ show n ++ " " ++ game ++ "\n",  msgSender = head activeClients}
           liftIO $ print activeClients
           xxx
     _ -> return ()
