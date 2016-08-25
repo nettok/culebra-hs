@@ -12,8 +12,7 @@ import Data.Conduit.TMChan
 import Network.Socket
 
 import qualified Data.ByteString.Char8 as C
-
-import Game (game)
+import qualified Game as G
 
 type ActiveClient = SockAddr
 
@@ -57,10 +56,10 @@ manageActiveClients activeClients = do
     Just evt ->
       case evt of
         RecvEvent msg ->
-          let activeClients = [msgSender msg]
+          let updatedActiveClients = [msgSender msg]
           in do
-            yield (RecvEvent msg, activeClients)
-            manageActiveClients activeClients
+            yield (RecvEvent msg, updatedActiveClients)
+            manageActiveClients updatedActiveClients
         TickEvent n -> do
           yield (TickEvent n, activeClients)
           manageActiveClients activeClients
@@ -78,7 +77,7 @@ xxx = do
           xxx
         TickEvent n -> do
           unless (null activeClients) $
-            yield Message { msgData = C.pack  $ "tick " ++ show n ++ " " ++ game ++ "\n",  msgSender = head activeClients}
+            yield Message { msgData = C.pack  $ "tick " ++ show n ++ "\n",  msgSender = head activeClients}
           liftIO $ print activeClients
           xxx
     _ -> return ()
