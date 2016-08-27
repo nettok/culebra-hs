@@ -17,7 +17,7 @@ module Game
   ) where
 
 import Prelude hiding (Left, Right)
-import System.Random
+import System.Random (randomRIO)
 
 data Pos = Pos
   { posX :: Int
@@ -99,4 +99,12 @@ randomDir = do
 moveRandom :: Snake -> IO Snake
 moveRandom snake = do
   dir <- randomDir
-  return $ move snake dir
+  if canMove gameBounds snake dir
+    then return $ move snake dir
+    else moveRandom snake
+
+gameBounds :: Bounds
+gameBounds = Bounds
+  { lowerBounds = Pos { posX = 0,    posY = 0 }
+  , upperBounds = Pos { posX = 1000, posY = 1000 }
+  }
