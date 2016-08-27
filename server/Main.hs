@@ -46,7 +46,7 @@ tickEvents n delayMillis = do
   tickEvents (n + 1) delayMillis
 
 handleEvents :: Conduit Event IO Message
-handleEvents = manageActiveClients [] =$= xxx
+handleEvents = manageActiveClients [] =$= gameLoop G.start
 
 -- TODO: really manage active clients, not only the client that sent the last message
 manageActiveClients :: [ActiveClient] -> Conduit Event IO (Event, [ActiveClient])
@@ -65,19 +65,19 @@ manageActiveClients activeClients = do
           manageActiveClients activeClients
     _ -> return ()
 
--- TODO: process "events" and produce any number of "messages" (temporary placeholder)
-xxx :: Conduit (Event, [ActiveClient]) IO Message
-xxx = do
+gameLoop :: G.GameState -> Conduit (Event, [ActiveClient]) IO Message
+gameLoop gs = do
   maybeEvtAndActiveClients <- await
   case maybeEvtAndActiveClients of
     Just (evt, activeClients) ->
       case evt of
         RecvEvent msg -> do
           yield msg
-          xxx
+          gameLoop gs
         TickEvent n -> do
           unless (null activeClients) $
-            yield Message { msgData = C.pack  $ "tick " ++ show n ++ "\n",  msgSender = head activeClients}
+            yield Message { msgData = C.pack $ show gs,  msgSender = head activeClients}
           liftIO $ print activeClients
-          xxx
+          newGs <- liftIO $ G.advanceRandom gs
+          gameLoop newGs
     _ -> return ()

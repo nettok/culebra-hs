@@ -70,7 +70,7 @@ move snake dir = snake
   }
 
 canMove :: Bounds -> Snake -> Dir -> Bool
-canMove bounds snake dir = canGo bounds (snakeHead snake) dir && not (collided (snakeHead snake) (snakeToBodyPositions snake))
+canMove bounds snake dir = canGo bounds (snakeHead snake) dir -- && not (collided (snakeHead snake) (tail $ snakeToBodyPositions snake))
 
 collided :: Pos -> [Pos] -> Bool
 collided pos poss = pos `elem` poss
