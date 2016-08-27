@@ -11,16 +11,20 @@ module Game
   , move
   , canMove
   , snakeToBodyPositions
+  -- demo
+  , start
+  , advanceRandom
   ) where
 
 import Prelude hiding (Left, Right)
+import System.Random
 
 data Pos = Pos
   { posX :: Int
   , posY :: Int
   } deriving (Eq, Show)
 
-data Dir = Up | Down | Left | Right deriving (Eq, Show)
+data Dir = Up | Down | Left | Right deriving (Eq, Show, Enum)
 
 data Color = Color Float Float Float Float deriving (Eq, Show) -- R G B Alpha [0.0, 1.0]
 
@@ -65,12 +69,34 @@ move snake dir = snake
   , snakeMoves = dir : init (snakeMoves snake)
   }
 
-canMove :: Bounds -> Snake -> Dir -> Snake -> Bool
-canMove = undefined
+canMove :: Bounds -> Snake -> Dir -> Bool
+canMove bounds snake dir = canGo bounds (snakeHead snake) dir && not (collided (snakeHead snake) (snakeToBodyPositions snake))
+
+collided :: Pos -> [Pos] -> Bool
+collided pos poss = pos `elem` poss
 
 snakeToBodyPositions :: Snake -> [Pos]
-snakeToBodyPositions snake = snakeToBodyPositions' (snakeHead snake) (snakeMoves snake)
+snakeToBodyPositions snake = init $ scanl (\pos mov -> go pos $ inverse mov) (snakeHead snake) (snakeMoves snake)
 
-snakeToBodyPositions' :: Pos -> Moves -> [Pos]
-snakeToBodyPositions' _ [] = []
-snakeToBodyPositions' currPos (mov:movs) = currPos : snakeToBodyPositions' (go currPos $ inverse mov) movs
+-- demo
+
+start :: GameState
+start = GameState
+  { gsSnakes =
+    [ Snake { snakeHead = Pos { posX = 500, posY = 500 }, snakeMoves = replicate 6 Left, snakeColor = Color 1.0 0.0 1.0 1.0 } ]
+  }
+
+advanceRandom :: GameState -> IO GameState
+advanceRandom gs = do
+  moved <- traverse moveRandom (gsSnakes gs)
+  return $ gs { gsSnakes = moved }
+
+randomDir :: IO Dir
+randomDir = do
+  n <- randomRIO (0, 3)
+  return $ [Up, Down, Left, Right] !! n
+
+moveRandom :: Snake -> IO Snake
+moveRandom snake = do
+  dir <- randomDir
+  return $ move snake dir
