@@ -39,14 +39,14 @@ data Snake = Snake
   , snakeColor :: Color
   } deriving (Generic, Eq, Show)
 
-data Bounds = Bounds
-  { lowerBounds :: Pos
-  , upperBounds :: Pos
-  } deriving (Generic, Eq, Show)
-
 data GameState = GameState
   { gsSnakes :: [Snake]
   } deriving (Generic, Eq, Show)
+
+data Bounds = Bounds
+  { lowerBounds :: Pos
+  , upperBounds :: Pos
+  } deriving (Eq, Show)
 
 inverse :: Dir -> Dir
 inverse Up    = Down
@@ -86,7 +86,7 @@ snakeToBodyPositions snake = init $ scanl (\pos mov -> go pos $ inverse mov) (sn
 start :: GameState
 start = GameState
   { gsSnakes =
-    [ Snake { snakeHead = Pos { posX = 500, posY = 500 }, snakeMoves = replicate 6 Left, snakeColor = Color 1.0 0.0 1.0 1.0 } ]
+    [ Snake { snakeHead = Pos { posX = 20, posY = 20 }, snakeMoves = replicate 6 Left, snakeColor = Color 1.0 0.0 1.0 1.0 } ]
   }
 
 advanceRandom :: GameState -> IO GameState
@@ -108,6 +108,6 @@ moveRandom snake = do
 
 gameBounds :: Bounds
 gameBounds = Bounds
-  { lowerBounds = Pos { posX = 0,    posY = 0 }
-  , upperBounds = Pos { posX = 1000, posY = 1000 }
+  { lowerBounds = Pos { posX = 0,  posY = 0 }
+  , upperBounds = Pos { posX = 40, posY = 40 }
   }
