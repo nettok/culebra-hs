@@ -6,13 +6,15 @@ import Control.Concurrent (threadDelay)
 import Control.Monad
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Resource
+import qualified Data.ByteString.Char8 as BC
+import qualified Data.ByteString.Lazy as BL
 import Data.Conduit
 import Data.Conduit.Network.UDP
 import Data.Conduit.TMChan
 import Network.Socket
 
-import qualified Data.ByteString.Char8 as C
 import qualified Game as G
+import SerDe (serializeToJson)
 
 type ActiveClient = SockAddr
 
@@ -76,7 +78,7 @@ gameLoop gs = do
           gameLoop gs
         TickEvent n -> do
           unless (null activeClients) $
-            yield Message { msgData = C.pack $ show gs,  msgSender = head activeClients}
+            yield Message { msgData = BL.toStrict $ serializeToJson gs,  msgSender = head activeClients}
           liftIO $ print activeClients
           newGs <- liftIO $ G.advanceRandom gs
           gameLoop newGs

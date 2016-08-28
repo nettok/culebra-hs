@@ -1,3 +1,5 @@
+{-# LANGUAGE DeriveGeneric #-}
+
 module Game
   ( Pos (..)
   , Dir (..)
@@ -16,17 +18,18 @@ module Game
   , advanceRandom
   ) where
 
+import GHC.Generics
 import Prelude hiding (Left, Right)
 import System.Random (randomRIO)
 
 data Pos = Pos
   { posX :: Int
   , posY :: Int
-  } deriving (Eq, Show)
+  } deriving (Generic, Eq, Show)
 
-data Dir = Up | Down | Left | Right deriving (Eq, Show, Enum)
+data Dir = Up | Down | Left | Right deriving (Generic, Eq, Show, Enum)
 
-data Color = Color Float Float Float Float deriving (Eq, Show) -- R G B Alpha [0.0, 1.0]
+data Color = Color Float Float Float Float deriving (Generic, Eq, Show) -- R G B Alpha [0.0, 1.0]
 
 type Moves = [Dir]
 
@@ -34,16 +37,16 @@ data Snake = Snake
   { snakeHead  :: Pos
   , snakeMoves :: Moves
   , snakeColor :: Color
-  } deriving (Eq, Show)
+  } deriving (Generic, Eq, Show)
 
 data Bounds = Bounds
   { lowerBounds :: Pos
   , upperBounds :: Pos
-  } deriving (Eq, Show)
+  } deriving (Generic, Eq, Show)
 
 data GameState = GameState
   { gsSnakes :: [Snake]
-  } deriving (Eq, Show)
+  } deriving (Generic, Eq, Show)
 
 inverse :: Dir -> Dir
 inverse Up    = Down
