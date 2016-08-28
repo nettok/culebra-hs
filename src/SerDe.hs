@@ -4,7 +4,6 @@ module SerDe
 
 import Data.Aeson
 import Data.Aeson.Types
---import Data.Aeson.Encode
 import Data.ByteString.Lazy as BL
 import Data.Char (toLower)
 import Game
