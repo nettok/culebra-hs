@@ -6,7 +6,6 @@ import Control.Concurrent (threadDelay)
 import Control.Monad
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Resource
-import qualified Data.ByteString.Char8 as BC
 import qualified Data.ByteString.Lazy as BL
 import Data.Conduit
 import Data.Conduit.Network.UDP
@@ -27,7 +26,7 @@ main = do
   sock <- liftIO udpSocket
   bindToAddr sock "127.0.0.1" 7777
   runResourceT $ do
-    mergedEvents <- mergeSources [recvEvents sock 4096, tickEvents 0 1000] 16
+    mergedEvents <- mergeSources [recvEvents sock 4096, tickEvents 0 50] 16
     liftIO (mergedEvents $$ handleEvents =$ sinkToSocket sock)
 
 udpSocket :: IO Socket

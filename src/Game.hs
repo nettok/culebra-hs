@@ -109,5 +109,5 @@ moveRandom snake = do
 gameBounds :: Bounds
 gameBounds = Bounds
   { lowerBounds = Pos { posX = 0,  posY = 0 }
-  , upperBounds = Pos { posX = 40, posY = 40 }
+  , upperBounds = Pos { posX = 39, posY = 39 }
   }
